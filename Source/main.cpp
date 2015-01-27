@@ -5,7 +5,6 @@
 #include <inetchannel.h>
 #include <eiface.h>
 #include <cdll_int.h>
-#include <replay/ienginereplay.h>
 
 namespace global
 {
