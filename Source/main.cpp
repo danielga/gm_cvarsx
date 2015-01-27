@@ -1,5 +1,5 @@
 #include <GarrysMod/Lua/Interface.h>
-#include <SymbolFinder.hpp>
+#include <cstdint>
 #include <interface.h>
 #include <hackedconvar.h>
 #include <inetchannel.h>
