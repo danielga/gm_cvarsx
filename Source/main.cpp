@@ -16,12 +16,12 @@ static CDllDemandLoader engine_loader( "engine.dll" );
 
 #elif defined __linux
 
-#if defined CVAR_SERVER
+#if defined CVARSX_SERVER
 
 static CDllDemandLoader icvar_loader( "libvstdlib_srv.so" );
 static CDllDemandLoader engine_loader( "engine_srv.so" );
 
-#elif defined CVAR_CLIENT
+#elif defined CVARSX_CLIENT
 
 static CDllDemandLoader icvar_loader( "libvstdlib.so" );
 static CDllDemandLoader engine_loader( "engine.so" );
@@ -35,13 +35,13 @@ static CDllDemandLoader engine_loader( "engine.dylib" );
 
 #endif
 
-#if defined CVAR_SERVER
+#if defined CVARSX_SERVER
 
 static const char *ivengine_name = "VEngineServer021";
 
 typedef IVEngineServer IVEngine;
 
-#elif defined CVAR_CLIENT
+#elif defined CVARSX_CLIENT
 
 static const char *ivengine_name = "VEngineClient015";
 
@@ -80,7 +80,7 @@ struct userdata
 {
 	void *data;
 	uint8_t type;
-	char name[32];
+	char name[64];
 	char help[256];
 };
 
@@ -147,7 +147,7 @@ LUA_FUNCTION_STATIC( tostring )
 	ConVar *cvar = GetAndValidate( state, 1, invalid_error );
 
 	char formatted[30] = { 0 };
-	V_snprintf( formatted, sizeof( formatted ), "%s: %p", metaname, cvar );
+	V_snprintf( formatted, sizeof( formatted ), "%s: 0x%p", metaname, cvar );
 	LUA->PushString( formatted );
 
 	return 1;
@@ -549,7 +549,7 @@ struct userdata
 {
 	void *data;
 	uint8_t type;
-	char name[32];
+	char name[64];
 	char help[256];
 };
 
@@ -616,7 +616,7 @@ LUA_FUNCTION_STATIC( tostring )
 	ConCommand *cmd = GetAndValidate( state, 1, invalid_error );
 
 	char formatted[30] = { 0 };
-	V_snprintf( formatted, sizeof( formatted ), "%s: %p", metaname, cmd );
+	V_snprintf( formatted, sizeof( formatted ), "%s: 0x%p", metaname, cmd );
 	LUA->PushString( formatted );
 
 	return 1;
@@ -815,7 +815,7 @@ LUA_FUNCTION_STATIC( Get )
 	return 1;
 }
 
-#if defined CVAR_SERVER
+#if defined CVARSX_SERVER
 
 LUA_FUNCTION_STATIC( Execute )
 {
@@ -826,7 +826,7 @@ LUA_FUNCTION_STATIC( Execute )
 	return 0;
 }
 
-#elif defined CVAR_CLIENT
+#elif defined CVARSX_CLIENT
 
 LUA_FUNCTION_STATIC( Execute )
 {
@@ -869,7 +869,7 @@ static void RegisterGlobalTable( lua_State *state )
 	LUA->PushCFunction( Execute );
 	LUA->SetField( -2, "Execute" );
 
-#if defined CVAR_CLIENT
+#if defined CVARSX_CLIENT
 
 	LUA->PushCFunction( ExecuteOnServer );
 	LUA->SetField( -2, "ExecuteOnServer" );
@@ -883,7 +883,7 @@ static void RegisterGlobalTable( lua_State *state )
 namespace Player
 {
 
-#if defined CVAR_SERVER
+#if defined CVARSX_SERVER
 
 static const char *invalid_error = "Player object is not valid";
 
@@ -946,7 +946,7 @@ LUA_FUNCTION_STATIC( ReplicateData )
 static void RegisterMetaTable( lua_State *state )
 {
 
-#if defined CVAR_SERVER
+#if defined CVARSX_SERVER
 
 	LUA->CreateMetaTableType( "Player", GarrysMod::Lua::Type::ENTITY );
 
