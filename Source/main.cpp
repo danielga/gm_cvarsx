@@ -568,7 +568,7 @@ LUA_FUNCTION_STATIC( GetConVarValue )
 	return 1;
 }
 
-LUA_FUNCTION_STATIC( ReplicateData )
+LUA_FUNCTION_STATIC( SetConVarValue )
 {
 	LUA->CheckType( 1, GarrysMod::Lua::Type::ENTITY );
 	LUA->CheckType( 2, GarrysMod::Lua::Type::STRING );
@@ -602,8 +602,8 @@ static void RegisterMetaTable( lua_State *state )
 	LUA->PushCFunction( GetConVarValue );
 	LUA->SetField( -2, "GetConVarValue" );
 
-	LUA->PushCFunction( ReplicateData );
-	LUA->SetField( -2, "ReplicateData" );
+	LUA->PushCFunction( SetConVarValue );
+	LUA->SetField( -2, "SetConVarValue" );
 
 #endif
 
