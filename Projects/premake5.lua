@@ -1,9 +1,10 @@
 SDK_FOLDER = "E:/Programming/source-sdk-2013/mp/src"
 GARRYSMOD_MODULE_BASE_FOLDER = "../gmod-module-base"
+SCANNING_FOLDER = "../scanning"
 SOURCE_FOLDER = "../Source"
 PROJECT_FOLDER = os.get() .. "/" .. _ACTION
 
-solution("gm_cvars")
+solution("gm_cvar")
 	language("C++")
 	location(PROJECT_FOLDER)
 	warnings("Extra")
@@ -25,19 +26,28 @@ solution("gm_cvars")
 		objdir(PROJECT_FOLDER .. "/Intermediate")
 		targetdir(PROJECT_FOLDER .. "/Debug")
 
-	project("gmsv_cvars")
+	project("gmsv_cvar")
 		kind("SharedLib")
-		defines({"GMMODULE", "CVARS_SERVER"})
+		defines({"GMMODULE", "CVAR_SERVER"})
 		includedirs({
 			SOURCE_FOLDER,
 			GARRYSMOD_MODULE_BASE_FOLDER .. "/include",
+			SCANNING_FOLDER,
 			SDK_FOLDER .. "/common",
 			SDK_FOLDER .. "/public",
 			SDK_FOLDER .. "/public/tier0",
 			SDK_FOLDER .. "/public/tier1"
 		})
-		files({SOURCE_FOLDER .. "/*.cpp"})
-		vpaths({["Source files"] = SOURCE_FOLDER .. "/**.cpp"})
+		files({
+			SOURCE_FOLDER .. "/*.cpp",
+			SCANNING_FOLDER .. "/SymbolFinder.cpp"
+		})
+		vpaths({
+			["Source files"] = {
+				SOURCE_FOLDER .. "/**.cpp",
+				SCANNING_FOLDER .. "/**.cpp"
+			}
+		})
 
 		targetprefix("")
 		targetextension(".dll")
@@ -46,9 +56,6 @@ solution("gm_cvars")
 			libdirs({SDK_FOLDER .. "/lib/public"})
 			links({"tier0", "tier1"})
 			targetsuffix("_win32")
-
-			filter({"system:windows", "configurations:Debug"})
-				linkoptions({"/NODEFAULTLIB:\"libcmt\""})
 
 		filter("system:linux")
 			defines({"POSIX", "GNUC", "_LINUX"})
@@ -64,19 +71,28 @@ solution("gm_cvars")
 			buildoptions({"-std=c++11"})
 			targetsuffix("_mac")
 
-	project("gmcl_cvars")
+	project("gmcl_cvar")
 		kind("SharedLib")
-		defines({"GMMODULE", "CVARS_CLIENT"})
+		defines({"GMMODULE", "CVAR_CLIENT"})
 		includedirs({
 			SOURCE_FOLDER,
 			GARRYSMOD_MODULE_BASE_FOLDER .. "/include",
+			SCANNING_FOLDER,
 			SDK_FOLDER .. "/common",
 			SDK_FOLDER .. "/public",
 			SDK_FOLDER .. "/public/tier0",
 			SDK_FOLDER .. "/public/tier1"
 		})
-		files({SOURCE_FOLDER .. "/*.cpp"})
-		vpaths({["Source files"] = SOURCE_FOLDER .. "/**.cpp"})
+		files({
+			SOURCE_FOLDER .. "/*.cpp",
+			SCANNING_FOLDER .. "/SymbolFinder.cpp"
+		})
+		vpaths({
+			["Source files"] = {
+				SOURCE_FOLDER .. "/**.cpp",
+				SCANNING_FOLDER .. "/**.cpp"
+			}
+		})
 
 		targetprefix("")
 		targetextension(".dll")
@@ -85,9 +101,6 @@ solution("gm_cvars")
 			libdirs({SDK_FOLDER .. "/lib/public"})
 			links({"tier0", "tier1"})
 			targetsuffix("_win32")
-
-			filter({"system:windows", "configurations:Debug"})
-				linkoptions({"/NODEFAULTLIB:\"libcmt\""})
 
 		filter("system:linux")
 			defines({"POSIX", "GNUC", "_LINUX"})
