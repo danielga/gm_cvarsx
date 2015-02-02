@@ -27,7 +27,11 @@ solution("gm_cvarsx")
 
 	project("gmsv_cvarsx")
 		kind("SharedLib")
-		defines({"GMMODULE", "CVARSX_SERVER"})
+		defines({
+			"GMMODULE",
+			"CVARSX_SERVER",
+			"SUPPRESS_INVALID_PARAMETER_NO_INFO"
+		})
 		includedirs({
 			SOURCE_FOLDER,
 			GARRYSMOD_MODULE_BASE_FOLDER .. "/include",
@@ -36,8 +40,18 @@ solution("gm_cvarsx")
 			SDK_FOLDER .. "/public/tier0",
 			SDK_FOLDER .. "/public/tier1"
 		})
-		files({SOURCE_FOLDER .. "/*.cpp"})
-		vpaths({["Source files"] = SOURCE_FOLDER .. "/**.cpp"})
+		files({
+			SOURCE_FOLDER .. "/*.h",
+			SOURCE_FOLDER .. "/*.cpp",
+			SDK_FOLDER .. "/public/tier0/memoverride.cpp"
+		})
+		vpaths({
+			["Header files"] = SOURCE_FOLDER .. "/**.h",
+			["Source files"] = {
+				SOURCE_FOLDER .. "/**.cpp",
+				SDK_FOLDER .. "/**.cpp"
+			}
+		})
 
 		targetprefix("")
 		targetextension(".dll")
@@ -66,7 +80,11 @@ solution("gm_cvarsx")
 
 	project("gmcl_cvarsx")
 		kind("SharedLib")
-		defines({"GMMODULE", "CVARSX_CLIENT"})
+		defines({
+			"GMMODULE",
+			"CVARSX_CLIENT",
+			"SUPPRESS_INVALID_PARAMETER_NO_INFO"
+		})
 		includedirs({
 			SOURCE_FOLDER,
 			GARRYSMOD_MODULE_BASE_FOLDER .. "/include",
@@ -75,8 +93,18 @@ solution("gm_cvarsx")
 			SDK_FOLDER .. "/public/tier0",
 			SDK_FOLDER .. "/public/tier1"
 		})
-		files({SOURCE_FOLDER .. "/*.cpp"})
-		vpaths({["Source files"] = SOURCE_FOLDER .. "/**.cpp"})
+		files({
+			SOURCE_FOLDER .. "/*.h",
+			SOURCE_FOLDER .. "/*.cpp",
+			SDK_FOLDER .. "/public/tier0/memoverride.cpp"
+		})
+		vpaths({
+			["Header files"] = SOURCE_FOLDER .. "/**.h",
+			["Source files"] = {
+				SOURCE_FOLDER .. "/**.cpp",
+				SDK_FOLDER .. "/**.cpp"
+			}
+		})
 
 		targetprefix("")
 		targetextension(".dll")
