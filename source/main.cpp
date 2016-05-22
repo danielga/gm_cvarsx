@@ -19,8 +19,8 @@
 namespace global
 {
 
-static SourceSDK::FactoryLoader icvar_loader( "vstdlib", true, IS_SERVERSIDE );
-static SourceSDK::FactoryLoader engine_loader( "engine", false, IS_SERVERSIDE );
+static SourceSDK::FactoryLoader icvar_loader( "vstdlib", true, IS_SERVERSIDE, "bin/" );
+static SourceSDK::FactoryLoader engine_loader( "engine", false, IS_SERVERSIDE, "bin/" );
 
 #if defined CVARSX_SERVER
 
@@ -41,7 +41,7 @@ static IVEngine *ivengine = nullptr;
 
 static void Initialize( lua_State *state )
 {
-	icvar = engine_loader.GetInterface<ICvar>( CVAR_INTERFACE_VERSION );
+	icvar = icvar_loader.GetInterface<ICvar>( CVAR_INTERFACE_VERSION );
 	if( icvar == nullptr )
 		LUA->ThrowError( "ICVar not initialized. Critical error." );
 
@@ -219,6 +219,37 @@ LUA_FUNCTION_STATIC( SetValue )
 	return 0;
 }
 
+LUA_FUNCTION_STATIC( GetBool )
+{
+	LUA->PushBool( Get( state, 1 )->GetBool( ) );
+	return 1;
+}
+
+LUA_FUNCTION_STATIC( GetDefault )
+{
+
+	LUA->PushString( Get( state, 1 )->GetDefault( ) );
+	return 1;
+}
+
+LUA_FUNCTION_STATIC( GetFloat )
+{
+	LUA->PushNumber( Get( state, 1 )->GetFloat( ) );
+	return 1;
+}
+
+LUA_FUNCTION_STATIC( GetInt )
+{
+	LUA->PushNumber( Get( state, 1 )->GetInt( ) );
+	return 1;
+}
+
+LUA_FUNCTION_STATIC( GetName )
+{
+	LUA->PushString( Get( state, 1 )->GetName( ) );
+	return 1;
+}
+
 LUA_FUNCTION_STATIC( SetName )
 {
 	UserData *udata = GetUserdata( state, 1 );
@@ -230,6 +261,12 @@ LUA_FUNCTION_STATIC( SetName )
 	convar->m_pszName = udata->name;
 
 	return 0;
+}
+
+LUA_FUNCTION_STATIC( GetString )
+{
+	LUA->PushString( Get( state, 1 )->GetString( ) );
+	return 1;
 }
 
 LUA_FUNCTION_STATIC( SetFlags )
@@ -261,6 +298,12 @@ LUA_FUNCTION_STATIC( SetHelpText )
 	convar->m_pszHelpString = udata->help;
 
 	return 0;
+}
+
+LUA_FUNCTION_STATIC( GetHelpText )
+{
+	LUA->PushString( Get( state, 1 )->GetHelpText( ) );
+	return 1;
 }
 
 LUA_FUNCTION_STATIC( Revert )
@@ -333,8 +376,26 @@ static void Initialize( lua_State *state )
 	LUA->PushCFunction( SetValue );
 	LUA->SetField( -2, "SetValue" );
 
+	LUA->PushCFunction( GetBool );
+	LUA->SetField( -2, "GetBool" );
+
+	LUA->PushCFunction( GetDefault );
+	LUA->SetField( -2, "GetDefault" );
+
+	LUA->PushCFunction( GetFloat );
+	LUA->SetField( -2, "GetFloat" );
+
+	LUA->PushCFunction( GetInt );
+	LUA->SetField( -2, "GetInt" );
+
+	LUA->PushCFunction( GetName );
+	LUA->SetField( -2, "GetName" );
+
 	LUA->PushCFunction( SetName );
 	LUA->SetField( -2, "SetName" );
+
+	LUA->PushCFunction( GetString );
+	LUA->SetField( -2, "GetString" );
 
 	LUA->PushCFunction( SetFlags );
 	LUA->SetField( -2, "SetFlags" );
@@ -347,6 +408,9 @@ static void Initialize( lua_State *state )
 
 	LUA->PushCFunction( SetHelpText );
 	LUA->SetField( -2, "SetHelpText" );
+
+	LUA->PushCFunction( GetHelpText );
+	LUA->SetField( -2, "GetHelpText" );
 
 	LUA->PushCFunction( Revert );
 	LUA->SetField( -2, "Revert" );
