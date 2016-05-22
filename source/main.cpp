@@ -232,12 +232,6 @@ LUA_FUNCTION_STATIC( SetName )
 	return 0;
 }
 
-LUA_FUNCTION_STATIC( GetString )
-{
-	LUA->PushString( Get( state, 1 )->GetString( ) );
-	return 1;
-}
-
 LUA_FUNCTION_STATIC( SetFlags )
 {
 	Get( state, 1 )->m_nFlags = static_cast<int32_t>( LUA->CheckNumber( 2 ) );
@@ -267,12 +261,6 @@ LUA_FUNCTION_STATIC( SetHelpText )
 	convar->m_pszHelpString = udata->help;
 
 	return 0;
-}
-
-LUA_FUNCTION_STATIC( GetHelpText )
-{
-	LUA->PushString( Get( state, 1 )->GetHelpText( ) );
-	return 1;
 }
 
 LUA_FUNCTION_STATIC( Revert )
@@ -348,9 +336,6 @@ static void Initialize( lua_State *state )
 	LUA->PushCFunction( SetName );
 	LUA->SetField( -2, "SetName" );
 
-	LUA->PushCFunction( GetString );
-	LUA->SetField( -2, "GetString" );
-
 	LUA->PushCFunction( SetFlags );
 	LUA->SetField( -2, "SetFlags" );
 
@@ -362,9 +347,6 @@ static void Initialize( lua_State *state )
 
 	LUA->PushCFunction( SetHelpText );
 	LUA->SetField( -2, "SetHelpText" );
-
-	LUA->PushCFunction( GetHelpText );
-	LUA->SetField( -2, "GetHelpText" );
 
 	LUA->PushCFunction( Revert );
 	LUA->SetField( -2, "Revert" );
