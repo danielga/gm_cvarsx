@@ -1,9 +1,8 @@
 #include <GarrysMod/Lua/Interface.h>
 #include <GarrysMod/Lua/AutoReference.h>
-#include <interfaces.hpp>
+#include <GarrysMod/Interfaces.hpp>
 #include <lua.hpp>
 #include <cstdint>
-#include <unordered_map>
 #include <hackedconvar.h>
 
 #if defined CVARSX_SERVER
@@ -220,37 +219,6 @@ LUA_FUNCTION_STATIC( SetValue )
 	return 0;
 }
 
-LUA_FUNCTION_STATIC( GetBool )
-{
-	LUA->PushBool( Get( state, 1 )->GetBool( ) );
-	return 1;
-}
-
-LUA_FUNCTION_STATIC( GetDefault )
-{
-
-	LUA->PushString( Get( state, 1 )->GetDefault( ) );
-	return 1;
-}
-
-LUA_FUNCTION_STATIC( GetFloat )
-{
-	LUA->PushNumber( Get( state, 1 )->GetFloat( ) );
-	return 1;
-}
-
-LUA_FUNCTION_STATIC( GetInt )
-{
-	LUA->PushNumber( Get( state, 1 )->GetInt( ) );
-	return 1;
-}
-
-LUA_FUNCTION_STATIC( GetName )
-{
-	LUA->PushString( Get( state, 1 )->GetName( ) );
-	return 1;
-}
-
 LUA_FUNCTION_STATIC( SetName )
 {
 	UserData *udata = GetUserdata( state, 1 );
@@ -376,21 +344,6 @@ static void Initialize( lua_State *state )
 
 	LUA->PushCFunction( SetValue );
 	LUA->SetField( -2, "SetValue" );
-
-	LUA->PushCFunction( GetBool );
-	LUA->SetField( -2, "GetBool" );
-
-	LUA->PushCFunction( GetDefault );
-	LUA->SetField( -2, "GetDefault" );
-
-	LUA->PushCFunction( GetFloat );
-	LUA->SetField( -2, "GetFloat" );
-
-	LUA->PushCFunction( GetInt );
-	LUA->SetField( -2, "GetInt" );
-
-	LUA->PushCFunction( GetName );
-	LUA->SetField( -2, "GetName" );
 
 	LUA->PushCFunction( SetName );
 	LUA->SetField( -2, "SetName" );
@@ -564,15 +517,16 @@ LUA_FUNCTION_STATIC( SetConVarValue )
 	if( netchan == nullptr )
 		LUA->ThrowError( invalid_error );
 
-	char buffer[256] = { 0 };
+	char buffer[2 + 260 + 260] = { 0 };
 	bf_write packet( buffer, sizeof( buffer ) );
+	packet.SetAssertOnOverflow( false );
 
 	packet.WriteUBitLong( 5, 6 );
 	packet.WriteByte( 0x01 );
 	packet.WriteString( LUA->GetString( 2 ) );
 	packet.WriteString( LUA->GetString( 3 ) );
 
-	LUA->PushBool( netchan->SendData( packet ) );
+	LUA->PushBool( !packet.IsOverflowed( ) ? netchan->SendData( packet ) : false );
 	return 1;
 }
 
