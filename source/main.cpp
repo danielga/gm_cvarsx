@@ -39,7 +39,7 @@ typedef IVEngineClient IVEngine;
 static ICvar *icvar = nullptr;
 static IVEngine *ivengine = nullptr;
 
-static void Initialize( lua_State *state )
+static void Initialize( GarrysMod::Lua::ILuaBase *LUA )
 {
 	icvar = icvar_loader.GetInterface<ICvar>( CVAR_INTERFACE_VERSION );
 	if( icvar == nullptr )
@@ -55,43 +55,42 @@ static void Initialize( lua_State *state )
 namespace convar
 {
 
-struct UserData
+struct Container
 {
 	ConVar *cvar;
-	uint8_t type;
 	const char *name_original;
 	char name[64];
 	const char *help_original;
 	char help[256];
 };
 
-static const char *metaname = "convar";
-static uint8_t metatype = GarrysMod::Lua::Type::COUNT + 1;
-static const char *invalid_error = "invalid convar";
-static const char *table_name = "convars_objects";
+static const char metaname[] = "convar";
+static uint8_t metatype = 255;
+static const char invalid_error[] = "invalid convar";
+static const char table_name[] = "convars_objects";
 
-inline void CheckType( lua_State *state, int32_t index )
+inline void CheckType( GarrysMod::Lua::ILuaBase *LUA, int32_t index )
 {
 	if( !LUA->IsType( index, metatype ) )
-		luaL_typerror( state, index, metaname );
+		LUA->TypeError( index, metaname );
 }
 
-inline UserData *GetUserdata( lua_State *state, int index )
+inline Container *GetUserdata( GarrysMod::Lua::ILuaBase *LUA, int index )
 {
-	return static_cast<UserData *>( LUA->GetUserdata( index ) );
+	return LUA->GetUserType<Container>( index, metatype );
 }
 
-static ConVar *Get( lua_State *state, int32_t index )
+static ConVar *Get( GarrysMod::Lua::ILuaBase *LUA, int32_t index )
 {
-	CheckType( state, index );
-	ConVar *convar = static_cast<UserData *>( LUA->GetUserdata( index ) )->cvar;
+	CheckType( LUA, index );
+	ConVar *convar = LUA->GetUserType<Container>( index, metatype )->cvar;
 	if( convar == nullptr )
 		LUA->ArgError( index, invalid_error );
 
 	return convar;
 }
 
-inline void Push( lua_State *state, ConVar *convar )
+inline void Push( GarrysMod::Lua::ILuaBase *LUA, ConVar *convar )
 {
 	if( convar == nullptr )
 	{
@@ -110,17 +109,16 @@ inline void Push( lua_State *state, ConVar *convar )
 
 	LUA->Pop( 1 );
 
-	UserData *udata = static_cast<UserData *>( LUA->NewUserdata( sizeof( UserData ) ) );
+	Container *udata = LUA->NewUserType<Container>( metatype );
 	udata->cvar = convar;
-	udata->type = metatype;
 	udata->name_original = convar->m_pszName;
 	udata->help_original = convar->m_pszHelpString;
 
-	LUA->CreateMetaTableType( metaname, metatype );
+	LUA->PushMetaTable( metatype );
 	LUA->SetMetaTable( -2 );
 
 	LUA->CreateTable( );
-	lua_setfenv( state, -2 );
+	LUA->SetFEnv( -2 );
 
 	LUA->PushUserdata( convar );
 	LUA->Push( -2 );
@@ -128,9 +126,9 @@ inline void Push( lua_State *state, ConVar *convar )
 	LUA->Remove( -2 );
 }
 
-inline ConVar *Destroy( lua_State *state, int32_t index )
+inline ConVar *Destroy( GarrysMod::Lua::ILuaBase *LUA, int32_t index )
 {
-	UserData *udata = GetUserdata( state, 1 );
+	Container *udata = GetUserdata( LUA, 1 );
 	ConVar *convar = udata->cvar;
 	if( convar == nullptr )
 		return nullptr;
@@ -153,19 +151,19 @@ LUA_FUNCTION_STATIC( gc )
 	if( !LUA->IsType( 1, metatype ) )
 		return 0;
 
-	Destroy( state, 1 );
+	Destroy( LUA, 1 );
 	return 0;
 }
 
 LUA_FUNCTION_STATIC( eq )
 {
-	LUA->PushBool( Get( state, 1 ) == Get( state, 2 ) );
+	LUA->PushBool( Get( LUA, 1 ) == Get( LUA, 2 ) );
 	return 1;
 }
 
 LUA_FUNCTION_STATIC( tostring )
 {
-	lua_pushfstring( state, "%s: %p", metaname, Get( state, 1 ) );
+	LUA->PushFormattedString( "%s: %p", metaname, Get( LUA, 1 ) );
 	return 1;
 }
 
@@ -179,7 +177,7 @@ LUA_FUNCTION_STATIC( index )
 
 	LUA->Pop( 2 );
 
-	lua_getfenv( state, 1 );
+	LUA->GetFEnv( 1 );
 	LUA->Push( 2 );
 	LUA->RawGet( -2 );
 	return 1;
@@ -187,7 +185,7 @@ LUA_FUNCTION_STATIC( index )
 
 LUA_FUNCTION_STATIC( newindex )
 {
-	lua_getfenv( state, 1 );
+	LUA->GetFEnv( 1 );
 	LUA->Push( 2 );
 	LUA->Push( 3 );
 	LUA->RawSet( -3 );
@@ -196,7 +194,7 @@ LUA_FUNCTION_STATIC( newindex )
 
 LUA_FUNCTION_STATIC( SetValue )
 {
-	ConVar *convar = Get( state, 1 );
+	ConVar *convar = Get( LUA, 1 );
 
 	switch( LUA->GetType( 2 ) )
 	{
@@ -221,38 +219,38 @@ LUA_FUNCTION_STATIC( SetValue )
 
 LUA_FUNCTION_STATIC( GetBool )
 {
-	LUA->PushBool( Get( state, 1 )->GetBool( ) );
+	LUA->PushBool( Get( LUA, 1 )->GetBool( ) );
 	return 1;
 }
 
 LUA_FUNCTION_STATIC( GetDefault )
 {
 
-	LUA->PushString( Get( state, 1 )->GetDefault( ) );
+	LUA->PushString( Get( LUA, 1 )->GetDefault( ) );
 	return 1;
 }
 
 LUA_FUNCTION_STATIC( GetFloat )
 {
-	LUA->PushNumber( Get( state, 1 )->GetFloat( ) );
+	LUA->PushNumber( Get( LUA, 1 )->GetFloat( ) );
 	return 1;
 }
 
 LUA_FUNCTION_STATIC( GetInt )
 {
-	LUA->PushNumber( Get( state, 1 )->GetInt( ) );
+	LUA->PushNumber( Get( LUA, 1 )->GetInt( ) );
 	return 1;
 }
 
 LUA_FUNCTION_STATIC( GetName )
 {
-	LUA->PushString( Get( state, 1 )->GetName( ) );
+	LUA->PushString( Get( LUA, 1 )->GetName( ) );
 	return 1;
 }
 
 LUA_FUNCTION_STATIC( SetName )
 {
-	UserData *udata = GetUserdata( state, 1 );
+	Container *udata = GetUserdata( LUA, 1 );
 	ConVar *convar = udata->cvar;
 	if( convar == nullptr )
 		LUA->ThrowError( invalid_error );
@@ -265,31 +263,31 @@ LUA_FUNCTION_STATIC( SetName )
 
 LUA_FUNCTION_STATIC( GetString )
 {
-	LUA->PushString( Get( state, 1 )->GetString( ) );
+	LUA->PushString( Get( LUA, 1 )->GetString( ) );
 	return 1;
 }
 
 LUA_FUNCTION_STATIC( SetFlags )
 {
-	Get( state, 1 )->m_nFlags = static_cast<int32_t>( LUA->CheckNumber( 2 ) );
+	Get( LUA, 1 )->m_nFlags = static_cast<int32_t>( LUA->CheckNumber( 2 ) );
 	return 0;
 }
 
 LUA_FUNCTION_STATIC( GetFlags )
 {
-	LUA->PushNumber( Get( state, 1 )->m_nFlags );
+	LUA->PushNumber( Get( LUA, 1 )->m_nFlags );
 	return 1;
 }
 
 LUA_FUNCTION_STATIC( HasFlag )
 {
-	LUA->Push( Get( state, 1 )->IsFlagSet( static_cast<int32_t>( LUA->CheckNumber( 2 ) ) ) );
+	LUA->Push( Get( LUA, 1 )->IsFlagSet( static_cast<int32_t>( LUA->CheckNumber( 2 ) ) ) );
 	return 1;
 }
 
 LUA_FUNCTION_STATIC( SetHelpText )
 {
-	UserData *udata = GetUserdata( state, 1 );
+	Container *udata = GetUserdata( LUA, 1 );
 	ConVar *convar = udata->cvar;
 	if( convar == nullptr )
 		LUA->ThrowError( invalid_error );
@@ -302,20 +300,20 @@ LUA_FUNCTION_STATIC( SetHelpText )
 
 LUA_FUNCTION_STATIC( GetHelpText )
 {
-	LUA->PushString( Get( state, 1 )->GetHelpText( ) );
+	LUA->PushString( Get( LUA, 1 )->GetHelpText( ) );
 	return 1;
 }
 
 LUA_FUNCTION_STATIC( Revert )
 {
-	Get( state, 1 )->Revert( );
+	Get( LUA, 1 )->Revert( );
 	return 0;
 }
 
 LUA_FUNCTION_STATIC( GetMin )
 {
 	float min = 0.0f;
-	if( !Get( state, 1 )->GetMin( min ) )
+	if( !Get( LUA, 1 )->GetMin( min ) )
 		return 0;
 
 	LUA->PushNumber( min );
@@ -324,14 +322,14 @@ LUA_FUNCTION_STATIC( GetMin )
 
 LUA_FUNCTION_STATIC( SetMin )
 {
-	Get( state, 1 )->m_fMinVal = static_cast<float>( LUA->CheckNumber( 2 ) );
+	Get( LUA, 1 )->m_fMinVal = static_cast<float>( LUA->CheckNumber( 2 ) );
 	return 0;
 }
 
 LUA_FUNCTION_STATIC( GetMax )
 {
 	float max = 0.0f;
-	if( !Get( state, 1 )->GetMax( max ) )
+	if( !Get( LUA, 1 )->GetMax( max ) )
 		return 0;
 
 	LUA->PushNumber( max );
@@ -340,23 +338,23 @@ LUA_FUNCTION_STATIC( GetMax )
 
 LUA_FUNCTION_STATIC( SetMax )
 {
-	Get( state, 1 )->m_fMaxVal = static_cast<float>( LUA->CheckNumber( 2 ) );
+	Get( LUA, 1 )->m_fMaxVal = static_cast<float>( LUA->CheckNumber( 2 ) );
 	return 0;
 }
 
 LUA_FUNCTION_STATIC( Remove )
 {
-	CheckType( state, 1 );
-	global::icvar->UnregisterConCommand( Destroy( state, 1 ) );
+	CheckType( LUA, 1 );
+	global::icvar->UnregisterConCommand( Destroy( LUA, 1 ) );
 	return 0;
 }
 
-static void Initialize( lua_State *state )
+static void Initialize( GarrysMod::Lua::ILuaBase *LUA )
 {
 	LUA->CreateTable( );
 	LUA->SetField( GarrysMod::Lua::INDEX_REGISTRY, table_name );
 
-	LUA->CreateMetaTableType( metaname, metatype );
+	metatype = LUA->CreateMetaTable( metaname );
 
 	LUA->PushCFunction( gc );
 	LUA->SetField( -2, "__gc" );
@@ -433,7 +431,7 @@ static void Initialize( lua_State *state )
 	LUA->Pop( 1 );
 }
 
-static void Deinitialize( lua_State *state )
+static void Deinitialize( GarrysMod::Lua::ILuaBase *LUA )
 {
 	LUA->PushNil( );
 	LUA->SetField( GarrysMod::Lua::INDEX_REGISTRY, metaname );
@@ -473,7 +471,7 @@ LUA_FUNCTION_STATIC( GetAll )
 		ConVar *convar = static_cast<ConVar *>( iter.Get( ) );
 		if( !convar->IsCommand( ) )
 		{
-			convar::Push( state, convar );
+			convar::Push( LUA, convar );
 			LUA->PushNumber( ++i );
 			LUA->SetTable( -3 );
 		}
@@ -484,11 +482,11 @@ LUA_FUNCTION_STATIC( GetAll )
 
 LUA_FUNCTION_STATIC( Get )
 {
-	convar::Push( state, global::icvar->FindVar( LUA->CheckString( 1 ) ) );
+	convar::Push( LUA, global::icvar->FindVar( LUA->CheckString( 1 ) ) );
 	return 1;
 }
 
-static void Initialize( lua_State *state )
+static void Initialize( GarrysMod::Lua::ILuaBase *LUA )
 {
 	LUA->GetField( GarrysMod::Lua::INDEX_GLOBAL, table_name );
 
@@ -504,7 +502,7 @@ static void Initialize( lua_State *state )
 	LUA->Pop( 1 );
 }
 
-static void Deinitialize( lua_State *state )
+static void Deinitialize( GarrysMod::Lua::ILuaBase *LUA )
 {
 	LUA->GetField( GarrysMod::Lua::INDEX_GLOBAL, table_name );
 
@@ -529,7 +527,7 @@ namespace Player
 
 static const char *invalid_error = "invalid Player";
 
-inline int GetEntityIndex( lua_State *state, int i )
+inline int GetEntityIndex( GarrysMod::Lua::ILuaBase *LUA, int i )
 {
 	LUA->Push( i );
 	LUA->GetField( -1, "EntIndex" );
@@ -545,7 +543,7 @@ LUA_FUNCTION_STATIC( GetConVarValue )
 	LUA->CheckType( 2, GarrysMod::Lua::Type::STRING );
 
 	LUA->PushString( global::ivengine->GetClientConVarValue(
-		GetEntityIndex( state, 1 ),
+		GetEntityIndex( LUA, 1 ),
 		LUA->GetString( 2 )
 	) );
 	return 1;
@@ -558,7 +556,7 @@ LUA_FUNCTION_STATIC( SetConVarValue )
 	LUA->CheckType( 3, GarrysMod::Lua::Type::STRING );
 
 	INetChannel *netchan = static_cast<INetChannel *>( global::ivengine->GetPlayerNetInfo(
-		GetEntityIndex( state, 1 )
+		GetEntityIndex( LUA, 1 )
 	) );
 	if( netchan == nullptr )
 		LUA->ThrowError( invalid_error );
@@ -576,9 +574,9 @@ LUA_FUNCTION_STATIC( SetConVarValue )
 	return 1;
 }
 
-static void Initialize( lua_State *state )
+static void Initialize( GarrysMod::Lua::ILuaBase *LUA )
 {
-	LUA->CreateMetaTableType( "Player", GarrysMod::Lua::Type::ENTITY );
+	LUA->GetField( GarrysMod::Lua::INDEX_REGISTRY, "Player" );
 
 	LUA->PushCFunction( GetConVarValue );
 	LUA->SetField( -2, "GetConVarValue" );
@@ -589,10 +587,10 @@ static void Initialize( lua_State *state )
 	LUA->Pop( 1 );
 }
 
-static void Deinitialize( lua_State *state )
+static void Deinitialize( GarrysMod::Lua::ILuaBase *LUA )
 {
 
-	LUA->CreateMetaTableType( "Player", GarrysMod::Lua::Type::ENTITY );
+	LUA->GetField( GarrysMod::Lua::INDEX_REGISTRY, "Player" );
 
 	LUA->PushNil( );
 	LUA->SetField( -2, "GetConVarValue" );
@@ -609,13 +607,13 @@ static void Deinitialize( lua_State *state )
 
 GMOD_MODULE_OPEN( )
 {
-	global::Initialize( state );
-	cvars::Initialize( state );
-	convar::Initialize( state );
+	global::Initialize( LUA );
+	cvars::Initialize( LUA );
+	convar::Initialize( LUA );
 
 #if defined CVARSX_SERVER
 
-	Player::Initialize( state );
+	Player::Initialize( LUA );
 
 #endif
 
@@ -627,11 +625,11 @@ GMOD_MODULE_CLOSE( )
 
 #if defined CVARSX_SERVER
 
-	Player::Deinitialize( state );
+	Player::Deinitialize( LUA );
 
 #endif
 
-	convar::Deinitialize( state );
-	cvars::Deinitialize( state );
+	convar::Deinitialize( LUA );
+	cvars::Deinitialize( LUA );
 	return 0;
 }
