@@ -1,6 +1,6 @@
 # gm_cvarsx
 
-A module for Garry's Mod that interfaces to interact with convars from VALVe's engine.
+A module for Garry's Mod that provides interfaces to interact with convars from VALVe's engine.
 
 ## Info
 

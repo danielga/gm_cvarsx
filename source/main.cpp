@@ -65,7 +65,7 @@ struct Container
 };
 
 static const char metaname[] = "convar";
-static uint8_t metatype = 255;
+static int32_t metatype = -1;
 static const char invalid_error[] = "invalid convar";
 static const char table_name[] = "convars_objects";
 

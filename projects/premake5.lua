@@ -12,8 +12,6 @@ end
 include(gmcommon)
 
 CreateWorkspace({name = "cvarsx"})
-	warnings("Default")
-	
 	CreateProject({serverside = true})
 		IncludeLuaShared()
 		IncludeSDKCommon()
