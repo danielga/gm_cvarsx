@@ -136,7 +136,7 @@ inline ConVar *Destroy( GarrysMod::Lua::ILuaBase *LUA, int32_t index )
 	LUA->GetField( GarrysMod::Lua::INDEX_REGISTRY, table_name );
 	LUA->PushUserdata( convar );
 	LUA->PushNil( );
-	LUA->SetTable( -2 );
+	LUA->SetTable( -3 );
 	LUA->Pop( 1 );
 
 	convar->m_pszName = udata->name_original;
