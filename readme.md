@@ -4,11 +4,11 @@ A module for Garry's Mod that provides interfaces to interact with convars from 
 
 ## Compiling
 
-The only supported compilation platform for this project on Windows is **Visual Studio 2017**. However, it's possible it'll work with *Visual Studio 2015* and *Visual Studio 2019* because of the unified runtime.
+The only supported compilation platform for this project on Windows is **Visual Studio 2017** on **release** mode. However, it's possible it'll work with *Visual Studio 2015*, *Visual Studio 2019* and *Visual Studio 2022* because of the unified runtime.
 
-On Linux, everything should work fine as is.
+On Linux, everything should work fine as is, on **release** mode.
 
-For macOS, any **Xcode (using the GCC compiler)** version *MIGHT* work as long as the **Mac OSX 10.7 SDK** is used.
+For macOS, any **Xcode (using the GCC compiler)** version *MIGHT* work as long as the **Mac OSX 10.7 SDK** is used, on **release** mode.
 
 These restrictions are not random; they exist because of ABI compatibility reasons.
 
